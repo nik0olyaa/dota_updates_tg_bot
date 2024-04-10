@@ -1,0 +1,18 @@
+[package]
+name = "dota_updates_tg_bot"
+version = "0.1.0"
+authors = ["nik0olyaa"]
+edition = "2021"
+
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11.25", features = ["tokio-native-tls", "json"] }
+serde_json = { version = "1.0", features = [] }
+serde = { version = "1.0.197", features = ["derive"] }
+teloxide = { version = "0.12.2", features = ["macros", "auto-send", "ctrlc_handler"] }
+regex = { version = "1.10.4", features = [] }
+dotenv = { version = "0.15.0", features = [] }
+thiserror = { version = "1.0.58", features = [] }
+log = { version = "0.4.21", features = [] }
+env_logger = { version = "0.11.3", features = [] }

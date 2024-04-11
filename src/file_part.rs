@@ -50,35 +50,6 @@ fn parse_json(content: &str) -> Result<Value, serde_json::Error> {
     serde_json::from_str(content)
 }
 
-/// Compares two JSON values recursively.
-///
-/// This function compares two JSON values recursively. It returns `true` if the values are equal,
-/// otherwise returns `false`.
-fn compare_json_values(value1: &Value, value2: &Value) -> bool {
-    match (value1, value2) {
-        (&Value::Object(ref obj1), &Value::Object(ref obj2)) => {
-            if obj1.len() != obj2.len() {
-                return false;
-            }
-            for (key, value) in obj1 {
-                if !obj2.contains_key(key) || !compare_json_values(value, &obj2[key]) {
-                    return false;
-                }
-            }
-            true
-        }
-        (&Value::Array(ref arr1), &Value::Array(ref arr2)) => {
-            if arr1.len() != arr2.len() {
-                return false;
-            }
-            arr1.iter()
-                .zip(arr2.iter())
-                .all(|(v1, v2)| compare_json_values(v1, v2))
-        }
-        _ => value1 == value2,
-    }
-}
-
 /// Compares the content of two JSON files.
 ///
 /// This function compares the content of two JSON files. It returns `Ok(true)` if the files are
@@ -95,7 +66,7 @@ fn compare_json_files(file1: &str, file2: &str) -> Result<bool, String> {
     let json_value2 = parse_json(&content2)
         .map_err(|err| format!("Failed to parse JSON from file {}: {}", file2, err))?;
     info!("Comparison complete.");
-    Ok(compare_json_values(&json_value1, &json_value2))
+    Ok(json_value1 == json_value2)
 }
 
 /// Performs file-related tasks.
@@ -154,17 +125,6 @@ mod tests {
         let content = "{\"key\":\"value\"}";
         let parsed_json = parse_json(content).unwrap();
         assert_eq!(parsed_json, json!({"key": "value"}));
-    }
-
-    #[test]
-    fn test_compare_json_values() {
-        let json1 = json!({"key1": "value1"});
-        let json2 = json!({"key1": "value1"});
-        assert!(compare_json_values(&json1, &json2));
-
-        let json3 = json!({"key1": "value1"});
-        let json4 = json!({"key2": "value2"});
-        assert!(!compare_json_values(&json3, &json4));
     }
 
     #[test]

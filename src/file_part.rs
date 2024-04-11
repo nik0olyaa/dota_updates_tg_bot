@@ -1,6 +1,5 @@
 use crate::errors::AppError;
 use crate::json_part::read_page_to_json_str_headlines;
-use crate::message_part::send_first_upd;
 use log::{error, info};
 use serde_json::{self, Value};
 use std::fs;
@@ -74,7 +73,7 @@ fn compare_json_files(file1: &str, file2: &str) -> Result<bool, String> {
 /// This function performs file-related tasks including reading headlines from a web page,
 /// writing them to a JSON file, comparing JSON files, removing and renaming files, and sending
 /// updates via Telegram. It logs information about each step and any errors encountered.
-pub async fn file_work(url: &str) {
+pub async fn file_work(url: &str) -> bool {
     info!("Starting file work...");
     let headlines = read_page_to_json_str_headlines(url)
         .await
@@ -83,8 +82,11 @@ pub async fn file_work(url: &str) {
         .await
         .expect("Failed to write headlines to JSON file");
 
-    match compare_json_files(FILE1, FILE2) {
-        Ok(true) => info!("The JSON files are equal. Nothing new."),
+    return match compare_json_files(FILE1, FILE2) {
+        Ok(true) => {
+            info!("The JSON files are equal. Nothing new.");
+            true
+        },
         Ok(false) => {
             info!("The JSON files are different.");
 
@@ -94,11 +96,13 @@ pub async fn file_work(url: &str) {
             if let Err(err) = fs::rename(FILE1, FILE2) {
                 error!("Failed to rename file {}: {}", FILE1, err);
             }
-            send_first_upd().await;
+            false
         }
-        Err(err) => println!("Error: {}", err),
+        Err(err) => {
+            error!("Error: {}", err);
+            true
+        },
     }
-    info!("File work completed.");
 }
 
 #[cfg(test)]

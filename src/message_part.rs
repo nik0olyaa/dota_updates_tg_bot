@@ -5,29 +5,13 @@ use teloxide::prelude::*;
 use teloxide::types::ParseMode;
 use teloxide::Bot;
 
-/// Sends the first update.
-///
-/// This function initializes a Telegram bot from environment variables and sets up a REPL
-/// (Read-Eval-Print Loop) using `teloxide::repl`. Incoming messages are handled asynchronously
-/// by the `handle_message()` function. If there's an error during message handling, it logs the error message.
-pub async fn send_first_upd() {
-    let bot = Bot::from_env();
-    teloxide::repl(bot, |bot: Bot, msg: Message| async move {
-        if let Err(e) = handle_message(&bot, &msg).await {
-            error!("Failed to send message: {}", e);
-        }
-        Ok(())
-    })
-    .await;
-}
-
 /// Handles an incoming message.
 ///
 /// This asynchronous function handles incoming messages. It first retrieves events using
 /// `json_part::read_page_to_json_str_events()` and processes the first event's body. It constructs
 /// a message body containing the event headline and processed body. The constructed message is then
 /// sent using `send_chunks()`. If there's an error during message handling, it returns an error message.
-async fn handle_message(bot: &Bot, msg: &Message) -> Result<(), String> {
+pub async fn handle_message(bot: &Bot, msg: &Message) -> Result<(), String> {
     let mut msg_msg = String::new();
     info!("Handling incoming message...");
     if let Ok(events) = json_part::read_page_to_json_str_events(LINK).await {

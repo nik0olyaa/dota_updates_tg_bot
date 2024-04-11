@@ -5,9 +5,11 @@ mod message_part;
 
 use crate::file_part::file_work;
 use dotenv::dotenv;
-use log::info;
+use log::{error, info};
 use std::env;
 use std::time::Duration;
+use teloxide::Bot;
+use teloxide::prelude::*;
 
 /// The URL used to fetch events related to Dota 2.
 const LINK: &str =
@@ -28,14 +30,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let sleep_duration = Duration::from_secs(sleep_duration_secs);
 
-    tokio::spawn(async move {
-        loop {
-            info!("Starting file work...");
-            file_work(LINK).await;
-            info!("File work completed.");
+    let bot = Bot::from_env();
 
-            tokio::time::sleep(sleep_duration).await;
-        }
+    tokio::spawn(async move {
+        teloxide::repl(bot, move |bot: Bot, msg: Message| async move {
+            while file_work(LINK).await {
+                info!("File work completed.");
+
+                tokio::time::sleep(sleep_duration).await;
+            };
+
+            if let Err(e) = message_part::handle_message(&bot, &msg).await {
+                error!("Failed to send message: {}", e);
+            }
+            Ok(())
+        }).await;
+
     })
     .await?;
 

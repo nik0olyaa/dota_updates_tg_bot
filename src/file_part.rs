@@ -1,11 +1,12 @@
+use crate::errors::AppError;
 use crate::json_part::read_page_to_json_str_headlines;
 use crate::message_part::send_first_upd;
 use log::{error, info};
 use serde_json::{self, Value};
 use std::fs;
 use std::fs::File;
+use std::io::Read;
 use std::io::Write;
-use std::io::{self, Read};
 
 const FILE1: &str = "temp_new.json";
 const FILE2: &str = "temp_old.json";
@@ -15,10 +16,9 @@ const FILE2: &str = "temp_old.json";
 /// This function writes the provided headlines to a JSON file. It converts the headlines into
 /// a JSON string using `serde_json::to_string()` and writes the string to the specified file.
 /// Returns `Ok(())` if the operation succeeds, otherwise returns an `io::Error`.
-pub async fn write_headlines_to_json_file(headlines: Vec<String>) -> Result<(), io::Error> {
+pub async fn write_headlines_to_json_file(headlines: Vec<String>) -> Result<(), AppError> {
     info!("Writing headlines to JSON file.");
-    let json_str =
-        serde_json::to_string(&headlines).expect("Failed to convert events to JSON string");
+    let json_str = serde_json::to_string(&headlines).map_err(AppError::ParseJsonError)?;
 
     let mut file = File::create("temp_new.json")?;
     file.write_all(json_str.as_bytes())?;
@@ -31,11 +31,12 @@ pub async fn write_headlines_to_json_file(headlines: Vec<String>) -> Result<(), 
 ///
 /// This function reads the content of the specified file into a string. Returns `Ok(content)`
 /// if the operation succeeds, otherwise returns an `io::Error`.
-fn read_file_content(filename: &str) -> Result<String, io::Error> {
+fn read_file_content(filename: &str) -> Result<String, AppError> {
     info!("Reading content from file: {}", filename);
-    let mut file = File::open(filename)?;
+    let mut file = File::open(filename).map_err(AppError::IoError)?;
     let mut content = String::new();
-    file.read_to_string(&mut content)?;
+    file.read_to_string(&mut content)
+        .map_err(AppError::IoError)?;
     info!("Content read from file: {}", filename);
     Ok(content)
 }

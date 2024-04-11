@@ -1,3 +1,4 @@
+mod errors;
 mod file_part;
 mod json_part;
 mod message_part;

@@ -19,7 +19,7 @@ pub async fn write_headlines_to_json_file(headlines: Vec<String>) -> Result<(), 
     info!("Writing headlines to JSON file.");
     let json_str = serde_json::to_string(&headlines).map_err(AppError::ParseJsonError)?;
 
-    let mut file = File::create("temp_new.json")?;
+    let mut file = File::create(FILE1)?;
     file.write_all(json_str.as_bytes())?;
     info!("Headlines successfully written to JSON file.");
 
